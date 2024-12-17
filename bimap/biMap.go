@@ -8,6 +8,11 @@ type BiMap[K comparable, V comparable] struct {
 	valueMap map[V]K
 }
 
+// Void type for key and values "sets"
+type Void struct{}
+
+var Null Void
+
 // Creates a new BiMap. Both Key and Value types should be comparable
 func NewBiMap[K comparable, V comparable]() *BiMap[K, V] {
 	biMap := BiMap[K, V]{keyMap: make(map[K]V), valueMap: make(map[V]K)}
@@ -45,12 +50,17 @@ func (biMap *BiMap[K, V]) ContainsValue(value V) bool {
 }
 
 // Gets key by the value
-func (biMap *BiMap[K, V]) GetKey(value V) (K, bool) {
-	key, ok := biMap.valueMap[value]
+//   - val - value of the matching entry
+//
+// Returns found key and a flag of success
+func (biMap *BiMap[K, V]) GetKey(val V) (K, bool) {
+	key, ok := biMap.valueMap[val]
 	return key, ok
 }
 
 // Removes entry from bi-map based on a key
+//   - biMap - bi-map to update
+//   - key - key of the entry bo be removed
 func (biMap *BiMap[K, V]) RemoveKey(key K) {
 	if val, ok := biMap.keyMap[key]; ok {
 		if _, ok = biMap.valueMap[val]; ok {
@@ -61,6 +71,8 @@ func (biMap *BiMap[K, V]) RemoveKey(key K) {
 }
 
 // Removes entry from bi-map based on a value
+//   - biMap - bi-map to update
+//   - val - value of the entry bo be removed
 func (biMap *BiMap[K, V]) RemoveValue(val V) {
 	if key, ok := biMap.valueMap[val]; ok {
 		if _, ok = biMap.keyMap[key]; ok {
@@ -76,6 +88,53 @@ func (biMap *BiMap[K, V]) Inverse() *BiMap[V, K] {
 	for key, val := range biMap.keyMap {
 		ret.keyMap[val] = key
 		ret.valueMap[key] = val
+	}
+	return ret
+}
+
+// Compares bi-map to the other
+//   - biMap - first bi-map to compare
+//   - other - second bi-map to compare
+func (biMap *BiMap[K, V]) Equals(other *BiMap[K, V]) bool {
+	if biMap.Size() != other.Size() {
+		return false
+	}
+
+	for k, v := range biMap.keyMap {
+		if v != biMap.keyMap[k] {
+			return false
+		}
+	}
+
+	return true
+}
+
+// Copies all of the mappings from another map to this
+//   - biMap - bi-map to copy to
+//   - other - bi-map to copy from
+func (biMap *BiMap[K, V]) PutAll(other *BiMap[K, V]) *BiMap[K, V] {
+	for k, v := range other.keyMap {
+		biMap.Put(k, v)
+	}
+	return biMap
+}
+
+// Returns a "set" of bi-map keys
+func (biMap *BiMap[K, V]) Keys() map[K]Void {
+	ret := make(map[K]Void, len(biMap.keyMap))
+
+	for key := range biMap.keyMap {
+		ret[key] = Null
+	}
+	return ret
+}
+
+// Returns a "set" of bi-map values
+func (biMap *BiMap[K, V]) Values() map[V]Void {
+	ret := make(map[V]Void, len(biMap.valueMap))
+
+	for val := range biMap.valueMap {
+		ret[val] = Null
 	}
 	return ret
 }
