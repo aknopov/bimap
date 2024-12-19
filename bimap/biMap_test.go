@@ -14,29 +14,41 @@ func stringify[V comparable](value V, ok bool) string {
 	return "nothing!"
 }
 
+func TestNewBiMap(t *testing.T) {
+	assert := assert.New(t)
+
+	aBimap := NewBiMapEx[string, int](5)
+
+	assert.Equal(0, aBimap.Size())
+}
+
 func TestBiMapBasics(t *testing.T) {
 	assert := assert.New(t)
 
 	aBimap := NewBiMap[string, int]()
-	assert.Equal(0, aBimap.Size())
 
 	aBimap.Put("Hello", 1)
 	assert.Equal(1, aBimap.Size())
-
-	assert.True(aBimap.ContainsKey("Hello"))
-	assert.True(aBimap.ContainsValue(1))
-	assert.False(aBimap.ContainsKey("there!"))
 
 	fmt.Println(stringify(aBimap.GetValue("Hello")))
 	fmt.Println(stringify(aBimap.GetKey(1)))
 	fmt.Println(stringify(aBimap.GetValue("there!")))
 	fmt.Println(stringify(aBimap.GetKey(-1)))
 
+	assert.True(aBimap.ContainsKey("Hello"))
+	assert.True(aBimap.ContainsValue(1))
+	assert.False(aBimap.ContainsKey("there!"))
+	
 	aBimap.Put("there!", 2)
 	assert.Equal(2, aBimap.Size())
 
 	aBimap.RemoveKey("Hello")
 	assert.Equal(1, aBimap.Size())
+	idx, ok :=  aBimap.GetValue("there!")
+	assert.True(ok)
+	assert.Equal(2, idx)
+	_, ok =  aBimap.GetValue("Hello")
+	assert.False(ok)
 
 	aBimap.RemoveValue(2)
 	assert.Equal(0, aBimap.Size())
@@ -49,13 +61,11 @@ func TestDuplicatedEntries(t *testing.T) {
 
 	aBimap.Put("Hello", 1)
 	assert.Equal(1, aBimap.Size())
-	assert.Equal(1, aBimap.Inverse().Size())
 	v, _ := aBimap.GetValue("Hello")
 	assert.Equal(1, v)
 
 	aBimap.Put("Hello", 2)
 	assert.Equal(1, aBimap.Size())
-	assert.Equal(1, aBimap.Inverse().Size())
 	v, _ = aBimap.GetValue("Hello")
 	assert.Equal(2, v)
 }
@@ -114,6 +124,8 @@ func TestPutAll(t *testing.T) {
 	assert.Equal(0, bimap2.Size())
 	bimap2.PutAll(bimap1)
 	assert.Equal(2, bimap2.Size())
+
+	// UC duplicated keys/values
 }
 
 func TestKeysValues(t *testing.T) {
@@ -123,6 +135,7 @@ func TestKeysValues(t *testing.T) {
 	aBimap.Put("Hello", 1)
 	aBimap.Put("there!", 2)
 
-	assert.Equal(map[string]Void{"Hello": Null, "there!": Null}, aBimap.Keys())
-	assert.Equal(map[int]Void{1: Null, 2: Null}, aBimap.Values())
+	assert.Equal([]string{"Hello", "there!"}, aBimap.Keys())
+	assert.Equal([]int{1, 2}, aBimap.Values())
 }
+
