@@ -49,11 +49,13 @@ func TestDuplicatedEntries(t *testing.T) {
 
 	aBimap.Put("Hello", 1)
 	assert.Equal(1, aBimap.Size())
+	assert.Equal(1, aBimap.Inverse().Size())
 	v, _ := aBimap.GetValue("Hello")
 	assert.Equal(1, v)
 
 	aBimap.Put("Hello", 2)
 	assert.Equal(1, aBimap.Size())
+	assert.Equal(1, aBimap.Inverse().Size())
 	v, _ = aBimap.GetValue("Hello")
 	assert.Equal(2, v)
 }

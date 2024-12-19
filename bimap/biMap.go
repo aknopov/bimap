@@ -24,20 +24,36 @@ func (biMap *BiMap[K, V]) Size() int {
 	return len(biMap.keyMap)
 }
 
-// Adds and entry to the bi-map
-func (biMap *BiMap[K, V]) Put(key K, value V) *BiMap[K, V] {
-	biMap.keyMap[key] = value
-	biMap.valueMap[value] = key
+// Adds or replaces an entry in bi-map
+//   - key - the entry key
+//   - val - the entry value
+// Returns this bi-map
+func (biMap *BiMap[K, V]) Put(key K, val V) *BiMap[K, V] {
+	if oldValue, ok := biMap.keyMap[key]; ok {
+		delete(biMap.valueMap, oldValue)
+	}
+	biMap.keyMap[key] = val
+	biMap.valueMap[val] = key
 	return biMap
 }
 
 // Gets value by the key
+//   - key - the map key
+// Returns found value and a flag of success
 func (biMap *BiMap[K, V]) GetValue(key K) (V, bool) {
 	val, ok := biMap.keyMap[key]
 	return val, ok
 }
 
-// Checks if key is present in the map
+// Gets key by the value
+//   - val - value of the matching entry
+// Returns found key and a flag of success
+func (biMap *BiMap[K, V]) GetKey(val V) (K, bool) {
+	key, ok := biMap.valueMap[val]
+	return key, ok
+}
+
+// Checks if the key is present in the map
 func (biMap *BiMap[K, V]) ContainsKey(key K) bool {
 	_, ok := biMap.keyMap[key]
 	return ok
@@ -47,15 +63,6 @@ func (biMap *BiMap[K, V]) ContainsKey(key K) bool {
 func (biMap *BiMap[K, V]) ContainsValue(value V) bool {
 	_, ok := biMap.valueMap[value]
 	return ok
-}
-
-// Gets key by the value
-//   - val - value of the matching entry
-//
-// Returns found key and a flag of success
-func (biMap *BiMap[K, V]) GetKey(val V) (K, bool) {
-	key, ok := biMap.valueMap[val]
-	return key, ok
 }
 
 // Removes entry from bi-map based on a key
@@ -118,6 +125,8 @@ func (biMap *BiMap[K, V]) PutAll(other *BiMap[K, V]) *BiMap[K, V] {
 	}
 	return biMap
 }
+
+//---------------------
 
 // Returns a "set" of bi-map keys
 func (biMap *BiMap[K, V]) Keys() map[K]Void {
