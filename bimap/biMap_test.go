@@ -17,7 +17,7 @@ func stringify[V comparable](value V, ok bool) string {
 func assertPanic(t *testing.T, msg string, f func()) {
 	defer func() {
 		if r := recover(); r == nil {
-			t.Errorf(msg)
+			t.Errorf("%s", msg)
 		}
 	}()
 	f()
@@ -73,9 +73,20 @@ func TestDuplicatedEntries(t *testing.T) {
 	v, _ := aBimap.GetValue("Hello")
 	assert.Equal(1, v)
 
+	// NOP case
+	aBimap.Put("Hello", 1)
+	assert.Equal(1, aBimap.Size())
+	v, _ = aBimap.GetValue("Hello")
+	assert.Equal(1, v)
+
 	aBimap.Put("Hello", 2)
 	assert.Equal(1, aBimap.Size())
 	v, _ = aBimap.GetValue("Hello")
+	assert.Equal(2, v)
+
+	aBimap.Put("test", 2)
+	assert.Equal(1, aBimap.Size())
+	v, _ = aBimap.GetValue("test")
 	assert.Equal(2, v)
 }
 
@@ -133,8 +144,6 @@ func TestPutAll(t *testing.T) {
 	assert.Equal(0, bimap2.Size())
 	bimap2.PutAll(bimap1)
 	assert.Equal(2, bimap2.Size())
-
-	// UC duplicated keys/values
 }
 
 func TestKeysValues(t *testing.T) {
@@ -146,13 +155,23 @@ func TestKeysValues(t *testing.T) {
 
 	assert.Equal([]string{"Hello", "there!"}, aBimap.Keys())
 	assert.Equal([]int{1, 2}, aBimap.Values())
+
+	// Replacement with duplicate key
+	aBimap.Put("Hello", 5)
+	assert.Equal([]string{"Hello", "there!"}, aBimap.Keys())
+	assert.Equal([]int{5, 2}, aBimap.Values())
+
+	// Replacement with duplicate value
+	aBimap.Put("test", 5)
+	assert.Equal([]string{"test", "there!"}, aBimap.Keys())
+	assert.Equal([]int{5, 2}, aBimap.Values())
 }
 
 func TestIterator(t *testing.T) {
 	assert := assert.New(t)
 
 	aBimap := NewBiMap[string, int]()
-	message := []string{"Hi ", "there!", " Here ", " goes ", " the ", "test."}
+	message := []string{"Hello ", "there!", " Here ", " goes ", " the ", "test."}
 	for i, v := range message {
 		aBimap.Put(v, i+1)
 	}

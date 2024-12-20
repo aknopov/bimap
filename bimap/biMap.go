@@ -1,5 +1,5 @@
-// Package bimap implements bi-directional map similar to Guava -
-// see https://guava.dev/releases/14.0/api/docs/com/google/common/collect/BiMap.html
+// Package bimap implements bi-directional map with unique sets of keys and values.
+// It preserves insertion order while iterating map entries, unless duplicate keys or values were added.
 package bimap
 
 // BiMap represents bidirectional map that has unique sets of keys AND values
@@ -42,25 +42,39 @@ func (biMap *BiMap[K, V]) Size() int {
 	return len(biMap.keys)
 }
 
-// Adds or replaces an entry in bi-map
+// Adds or replaces an entry in bi-map. This method has no effect if the bi-map previously had key-value mapping.
+//
+// Note that a call to this method could cause the size of the bimap to increase by one, stay the same, or even decrease by one.
 //   - key - the entry key
 //   - val - the entry value
 //
 // Returns this bi-map
-func (biMap *BiMap[K, V]) Put(key K, val V) *BiMap[K, V] {
-	if i, ok := biMap.keyIdx[key]; ok {
+func (biMap *BiMap[K, V]) Put(key K, val V) {
+	i, okKey := biMap.keyIdx[key]
+	j, okVal := biMap.valIdx[val]
+	switch {
+	case okVal && okKey && i == j: // NOP case
+		return
+	case okKey:                    //  new key
 		oldVal := biMap.vals[i]
 		delete(biMap.valIdx, oldVal)
+		biMap.valIdx[val] = i
 		biMap.keys[i] = key
 		biMap.vals[i] = val
-		biMap.valIdx[val] = i
-	} else {
+	case okVal:                    //  new value
+		oldKey := biMap.keys[j]
+		delete(biMap.keyIdx, oldKey)
+		biMap.keyIdx[key] = j
+		biMap.keys[j] = key
+		biMap.vals[j] = val
+	case !okKey && !okVal:          // new key and value
 		biMap.keyIdx[key] = len(biMap.keys)
 		biMap.valIdx[val] = len(biMap.vals)
 		biMap.keys = append(biMap.keys, key)
 		biMap.vals = append(biMap.vals, val)
+	default:
+		panic("Interval BiMap error - key-value mismatch")
 	}
-	return biMap
 }
 
 // Gets value by the key
