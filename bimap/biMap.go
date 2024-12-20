@@ -2,8 +2,6 @@
 // see https://guava.dev/releases/14.0/api/docs/com/google/common/collect/BiMap.html
 package bimap
 
-import "reflect"
-
 // BiMap represents bidirectional map that has unique sets of keys AND values
 type BiMap[K comparable, V comparable] struct {
 	keys   []K
@@ -12,6 +10,11 @@ type BiMap[K comparable, V comparable] struct {
 	valIdx map[V]int
 	noKey  K
 	noVal  V
+}
+
+type BiMapIterator[K comparable, V comparable] struct {
+	biMap *BiMap[K, V]
+	idx   int
 }
 
 // Void type for key and values "sets"
@@ -129,7 +132,7 @@ func (biMap *BiMap[K, V]) removeEntry(key K, val V, i int) {
 // Creates "inverse" copy of the bitmap
 func (biMap *BiMap[K, V]) Inverse() *BiMap[V, K] {
 	size := biMap.Size()
-	invMap := BiMap[V,K]{}
+	invMap := BiMap[V, K]{}
 	invMap.keys = append(invMap.keys, biMap.vals...)
 	invMap.vals = append(invMap.vals, biMap.keys...)
 	invMap.keyIdx = make(map[V]int, size)
@@ -141,11 +144,25 @@ func (biMap *BiMap[K, V]) Inverse() *BiMap[V, K] {
 	return &invMap
 }
 
+func cmpSlices[T comparable](a []T, b []T) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i, v := range a {
+		if v != b[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
 // Compares bi-map to the other
 //   - biMap - first bi-map to compare
 //   - other - second bi-map to compare
 func (biMap *BiMap[K, V]) Equals(other *BiMap[K, V]) bool {
-	return  reflect.DeepEqual(biMap.keys, other.keys) && reflect.DeepEqual(biMap.vals, other.vals)
+	return cmpSlices(biMap.keys, other.keys) && cmpSlices(biMap.vals, other.vals)
 }
 
 // Copies all of the mappings from another map to this
@@ -166,4 +183,21 @@ func (biMap *BiMap[K, V]) Keys() []K {
 // Returns a slice of bi-map values
 func (biMap *BiMap[K, V]) Values() []V {
 	return biMap.vals
+}
+
+// Creates iterator over BiMap
+func (biMap *BiMap[K, V]) Iterator() BiMapIterator[K, V] {
+	return BiMapIterator[K, V]{biMap: biMap, idx: 0}
+}
+
+// Checks if iterator can provide another entry from bi-map
+func (it *BiMapIterator[K, V]) HasNext() bool {
+	return it.idx < it.biMap.Size()
+}
+
+// Provides next available bi-map entry
+func (it *BiMapIterator[K, V]) Next() (K, V) {
+	oldIdx := it.idx
+	it.idx++
+	return it.biMap.keys[oldIdx], it.biMap.vals[oldIdx]
 }

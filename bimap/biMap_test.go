@@ -14,6 +14,15 @@ func stringify[V comparable](value V, ok bool) string {
 	return "nothing!"
 }
 
+func assertPanic(t *testing.T, msg string, f func()) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf(msg)
+		}
+	}()
+	f()
+}
+
 func TestNewBiMap(t *testing.T) {
 	assert := assert.New(t)
 
@@ -38,16 +47,16 @@ func TestBiMapBasics(t *testing.T) {
 	assert.True(aBimap.ContainsKey("Hello"))
 	assert.True(aBimap.ContainsValue(1))
 	assert.False(aBimap.ContainsKey("there!"))
-	
+
 	aBimap.Put("there!", 2)
 	assert.Equal(2, aBimap.Size())
 
 	aBimap.RemoveKey("Hello")
 	assert.Equal(1, aBimap.Size())
-	idx, ok :=  aBimap.GetValue("there!")
+	idx, ok := aBimap.GetValue("there!")
 	assert.True(ok)
 	assert.Equal(2, idx)
-	_, ok =  aBimap.GetValue("Hello")
+	_, ok = aBimap.GetValue("Hello")
 	assert.False(ok)
 
 	aBimap.RemoveValue(2)
@@ -139,3 +148,23 @@ func TestKeysValues(t *testing.T) {
 	assert.Equal([]int{1, 2}, aBimap.Values())
 }
 
+func TestIterator(t *testing.T) {
+	assert := assert.New(t)
+
+	aBimap := NewBiMap[string, int]()
+	message := []string{"Hi ", "there!", " Here ", " goes ", " the ", "test."}
+	for i, v := range message {
+		aBimap.Put(v, i+1)
+	}
+
+	it := aBimap.Iterator()
+	i := 0
+	for it.HasNext() {
+		k, v := it.Next()
+		assert.Equal(message[i], k)
+		assert.Equal(i+1, v)
+		i++
+	}
+
+	assertPanic(t, "No panic?", func() { it.Next() })
+}
