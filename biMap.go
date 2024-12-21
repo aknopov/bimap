@@ -17,11 +17,6 @@ type BiMapIterator[K comparable, V comparable] struct {
 	idx   int
 }
 
-// Void type for key and values "sets"
-type Void struct{}
-
-var Null Void
-
 // Creates a new zero-sized BiMap
 func NewBiMap[K comparable, V comparable]() *BiMap[K, V] {
 	return NewBiMapEx[K, V](0)
