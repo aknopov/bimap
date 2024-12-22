@@ -50,19 +50,19 @@ func (biMap *BiMap[K, V]) Put(key K, val V) {
 	switch {
 	case okVal && okKey && i == j: // NOP case
 		return
-	case okKey:                    //  new key
+	case okKey: //  new key
 		oldVal := biMap.vals[i]
 		delete(biMap.valIdx, oldVal)
 		biMap.valIdx[val] = i
 		biMap.keys[i] = key
 		biMap.vals[i] = val
-	case okVal:                    //  new value
+	case okVal: //  new value
 		oldKey := biMap.keys[j]
 		delete(biMap.keyIdx, oldKey)
 		biMap.keyIdx[key] = j
 		biMap.keys[j] = key
 		biMap.vals[j] = val
-	case !okKey && !okVal:          // new key and value
+	case !okKey && !okVal: // new key and value
 		biMap.keyIdx[key] = len(biMap.keys)
 		biMap.valIdx[val] = len(biMap.vals)
 		biMap.keys = append(biMap.keys, key)
