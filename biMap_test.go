@@ -2,7 +2,9 @@ package bimap
 
 import (
 	"fmt"
+	"math/rand/v2"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -186,4 +188,37 @@ func TestIterator(t *testing.T) {
 	}
 
 	assertPanic(t, "No panic?", func() { it.Next() })
+}
+
+const nCount = 10000000
+
+func TestPerformance(t *testing.T) {
+	assert := assert.New(t)
+
+	data := make(map[int]int)
+	for i := 0; i < nCount; i++ {
+		data[i] = rand.IntN(nCount)
+	}
+
+	start := time.Now().UnixMilli()
+	for _, v := range data {
+		assert.Less(v, nCount)
+	}
+	singleMapDuration := time.Now().UnixMilli() - start
+
+	aMap := NewBiMapEx[int, int](nCount)
+
+	for k, v := range data {
+		aMap.Put(k, v)
+	}
+
+	start = time.Now().UnixMilli()
+	it := aMap.Iterator()
+	for it.HasNext() {
+		_, v := it.Next()
+		assert.Less(v, nCount)
+	}
+	biMapDuration := time.Now().UnixMilli() - start
+
+	assert.Less(biMapDuration, singleMapDuration)
 }
